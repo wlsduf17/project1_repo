@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.PurchseManageMapper">
+
+	<insert id="insertPurchse">
+		
+		<selectKey keyProperty="purchseNo" order="BEFORE" resultType="Integer">
+			SELECT PURCHSE_INFO_SQ.NEXTVAL
+			FROM DUAL
+		</selectKey>
+		
+		INSERT INTO PURCHSE_INFO
+			(
+				PURCHSE_NO,
+				MBER_ID,
+				PURCHSE_PRICE
+			)
+		VALUES
+			(
+				#{purchseNo},
+				#{mberId},
+				#{purchsePrice}
+			)
+			
+	</insert>
+	
+	<insert id="insertPurchseDetail">
+	
+		INSERT INTO PURCHSE_DETAIL
+			(
+				PURCHSE_NO,
+				PROD_NO,
+				PROD_NM,
+				PROD_PRICE,
+				DISCNT_RATE
+			)
+		VALUES
+			(
+				#{purchseNo},
+				#{prodNo},
+				#{prodNm},
+				#{prodPrice},
+				#{discntRate}
+			)
+	
+	</insert>
+	
+	<select id="selectPurchseListWithPaging" resultType="com.raregames.domain.PurchseManageVO">
+	
+		SELECT
+			PURCHSE_NO			purchseNo,
+			MBER_ID				mberId,
+			PURCHSE_PRICE		purchsePrice,
+			PURCHSE_DE			purchseDe
+		FROM
+			(
+				SELECT /*+ INDEX_DESC(PURCHSE_INFO PURCHSE_INFO_PK) */
+					ROWNUM RN,
+					PURCHSE_NO,
+					MBER_ID,
+					PURCHSE_PRICE,
+					PURCHSE_DE
+				FROM
+					PURCHSE_INFO
+				WHERE
+					<trim prefix="(" suffix=")AND" prefixOverrides="or">
+						<foreach collection="searchTypeArr" item="searchType">
+							<trim prefix="or">
+								<choose>
+									<when test="searchType == 'mberId'">
+										MBER_ID LIKE '%' || #{searchTerm} || '%'
+									</when>
+									<when test="searchType == 'purchseDe'">
+										TO_CHAR(PURCHSE_DE, 'YYYY-MM-DD HH24:MI') LIKE '%' || #{searchTerm} || '%'
+									</when>
+								</choose>
+							</trim>
+						</foreach>
+					</trim>
+					<![CDATA[
+					ROWNUM <= (#{pageNo} * #{pageSize})
+			)
+		WHERE
+			RN > ((#{pageNo}  - 1) * #{pageSize})
+			]]>
+			
+	</select>
+	
+	<select id="getTotalCo" resultType="int">
+		
+		SELECT
+			COUNT(*)
+		FROM
+			PURCHSE_INFO			
+		<trim prefix="WHERE(" suffix=")" prefixOverrides="or">
+			<foreach collection="searchTypeArr" item="searchType">
+				<trim prefix="or">
+					<choose>
+						<when test="searchType == 'purchseDe'">
+							MBER_ID LIKE '%' || #{searchTerm} || '%'
+						</when>
+						<when test="searchType == 'prodNm'">
+							TO_CHAR(PURCHSE_DE, 'YYYY-MM-DD HH24:MI') LIKE '%' || #{searchTerm} || '%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+				
+				
+	</select>
+	
+	<select id="selectPurchseDetail" resultType="com.raregames.domain.PurchseDetailVO">
+	
+		SELECT
+			PURCHSE_NO		purchseNo,
+			PROD_NO			prodNo,
+			PROD_NM			prodNm,
+			PROD_PRICE		prodPrice,
+			DISCNT_RATE		discntRate
+		FROM
+			PURCHSE_DETAIL
+		WHERE
+			PURCHSE_NO = #{purchseNo}
+	
+	</select>
+
+	<select id="selectMberPurchseList" resultType="com.raregames.domain.PurchseProdVO">
+	
+		SELECT /*+ INDEX_DESC(PURCHSE_INFO PURCHSE_INFO_PK) */
+			a.PURCHSE_NO			purchseNo,
+			a.MBER_ID				mberId,
+			a.PURCHSE_PRICE			purchsePrice,
+			a.PURCHSE_DE			purchseDe,
+			b.PROD_NO				prodNo,
+			c.PROD_NM				prodNm,
+			c.PROD_PRICE			prodPrice,
+			c.DISCNT_RATE			discntRate,
+			c.PROD_IMG				prodImg,
+			c.FRST_REGIST_DE		frstRegistDe
+		FROM
+			PURCHSE_INFO a
+		INNER JOIN
+			PURCHSE_DETAIL b
+		ON
+			a.PURCHSE_NO = b.PURCHSE_NO
+		INNER JOIN
+			PROD_INFO c
+		ON
+			b.PROD_NO = c.PROD_NO
+		WHERE
+			a.MBER_ID = #{mberId}
+			
+	</select>
+	
+</mapper>

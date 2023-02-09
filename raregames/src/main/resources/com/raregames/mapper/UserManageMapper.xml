@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.UserManageMapper">
+
+	<select id="selectUser" resultType="com.raregames.domain.UserManageVO">
+	
+		SELECT
+			USER_ID 			userId,
+			USER_PASSWORD		userPassword,
+			USER_NM				userNm,
+			RCNT_CONECT_DE		rcntConectDe
+		FROM
+			USER_INFO
+		WHERE
+			USER_ID = #{userId}
+	
+	</select>
+
+	<update id="updateRcntConectDe">
+	
+		UPDATE
+			USER_INFO
+		SET
+			RCNT_CONECT_DE = SYSDATE
+			
+	</update>
+
+</mapper>

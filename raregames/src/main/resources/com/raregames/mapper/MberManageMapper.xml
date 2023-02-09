@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.MberManageMapper">
+
+	<insert id="insertMber">
+	
+		INSERT INTO MBER_INFO
+			(
+				MBER_ID,
+				MBER_PASSWORD,
+				MBER_NM,
+				MBER_NICKNM,
+				INFO_RECEPT_AT	
+			)
+		VALUES 
+			(
+				#{mberId},
+				#{mberPassword},
+				#{mberNm},
+				#{mberNicknm},
+				#{infoReceptAt}	
+			)
+	
+	</insert>
+
+	<select id="checkNicknmDplct" resultType="com.raregames.domain.MberManageVO">
+		
+		SELECT
+			MBER_NICKNM 		mberNicknm
+		FROM
+			MBER_INFO
+		WHERE
+			MBER_NICKNM = #{mberNicknm}
+	
+	</select>
+	
+	<select id="checkIdDplct" resultType="com.raregames.domain.MberManageVO">
+		
+		SELECT
+			MBER_ID 			mberId
+		FROM
+			MBER_INFO
+		WHERE
+			MBER_ID = #{mberId}
+	
+	</select>
+	
+	<select id="selectMber" resultType="com.raregames.domain.MberManageVO">
+		
+		SELECT
+			MBER_ID 			mberId,
+			MBER_PASSWORD		mberPassword,
+			MBER_NM				mberNm,
+			MBER_NICKNM			mberNicknm,
+			INFO_RECEPT_AT		infoReceptAt,
+			FRST_REGIST_DE 		frstRegistDe,
+			LAST_UPDT_DE		lastUpdtDe,
+			RCNT_CONECT_DE		rcntConectDe,
+			MBTLNUM				mbtlnum,
+			ZIP					zip,
+			ADRES				adres,
+			DETAIL_ADRES		detailAdres
+		FROM
+			MBER_INFO
+		WHERE
+			MBER_ID = #{mberId}
+	
+	</select>
+	
+	<update id="updateMber">
+		
+		UPDATE 
+			MBER_INFO
+		SET
+			MBER_NICKNM = #{mberNicknm},
+			INFO_RECEPT_AT = #{infoReceptAt},
+			MBTLNUM = #{mbtlnum},
+			ZIP = #{zip},
+			ADRES = #{adres},
+			DETAIL_ADRES = #{detailAdres}
+		WHERE
+			MBER_ID = #{mberId}
+			
+	</update>
+	
+	<update id="updatePassword">
+	
+		UPDATE 
+			MBER_INFO
+		SET
+			MBER_PASSWORD = #{mberPassword}
+		WHERE
+			MBER_ID = #{mberId}
+	
+	</update>
+	
+	<delete id="deleteMber">
+	
+		DELETE 
+		FROM 
+			MBER_INFO
+		WHERE 
+			MBER_ID = #{mberId}
+	
+	</delete>
+	
+	<update id="updateRcntConectDe">
+	
+		UPDATE
+			MBER_INFO
+		SET
+			RCNT_CONECT_DE = SYSDATE
+	
+	</update>
+	
+	<select id="selectMberListWithPaging" resultType="com.raregames.domain.MberManageVO">
+	
+		SELECT
+			MBER_ID 			mberId,
+			MBER_PASSWORD		mberPassword,
+			MBER_NM				mberNm,
+			MBER_NICKNM			mberNicknm,
+			INFO_RECEPT_AT		infoReceptAt,
+			FRST_REGIST_DE 		frstRegistDe,
+			LAST_UPDT_DE		lastUpdtDe,
+			RCNT_CONECT_DE		rcntConectDe,
+			MBTLNUM				mbtlnum,
+			ZIP					zip,
+			ADRES				adres,
+			DETAIL_ADRES		detailAdres
+		FROM
+			(
+				SELECT /*+ INDEX_DESC(MBER_INFO MBER_INFO_PK) */
+					ROWNUM RN,
+					MBER_ID,
+					MBER_PASSWORD,
+					MBER_NM,
+					MBER_NICKNM,
+					INFO_RECEPT_AT,
+					FRST_REGIST_DE,
+					LAST_UPDT_DE,
+					RCNT_CONECT_DE,
+					MBTLNUM,
+					ZIP,
+					ADRES,
+					DETAIL_ADRES
+				FROM
+					MBER_INFO
+				WHERE
+					<trim prefix="(" suffix=") AND" prefixOverrides="or">
+			 			<foreach collection="searchTypeArr" item="searchType">
+							<trim prefix="or">
+								<choose>
+									<when test="searchType == 'mberId'">
+										MBER_ID like '%' || #{searchTerm} || '%' 
+									</when>
+									<when test="searchType == 'mberNm'">
+										MBER_NM like '%' || #{searchTerm} || '%' 
+									</when>
+									<when test="searchType == 'mberNicknm'">
+										MBER_NICKNM like '%' || #{searchTerm} || '%' 
+									</when>
+								</choose>
+							</trim>
+			 			</foreach>
+			 		</trim>
+					<![CDATA[
+					ROWNUM <= (#{pageNo} * #{pageSize})
+			)
+		WHERE
+			RN > ((#{pageNo} - 1) * #{pageSize})
+			]]>
+	
+	</select>
+	
+	<select id="getTotalCo" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			MBER_INFO
+		<trim prefix="WHERE(" suffix=")" prefixOverrides="or">
+ 			<foreach collection="searchTypeArr" item="searchType">
+				<trim prefix="or">
+					<choose>
+						<when test="searchType == 'mberId'">
+							MBER_ID like '%' || #{searchTerm} || '%' 
+						</when>
+						<when test="searchType == 'mberNm'">
+							MBER_NM like '%' || #{searchTerm} || '%' 
+						</when>
+						<when test="searchType == 'mberNicknm'">
+							MBER_NICKNM like '%' || #{searchTerm} || '%' 
+						</when>
+					</choose>
+				</trim>
+ 			</foreach>
+ 		</trim>
+			 		
+	</select>
+	
+</mapper>

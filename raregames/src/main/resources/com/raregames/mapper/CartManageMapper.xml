@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.CartManageMapper">
+
+	<insert id="insertCart">
+	
+		INSERT INTO CART_INFO
+			(
+				CART_NO,
+				PROD_NO,
+				MBER_ID
+			)
+		VALUES
+			(
+				CART_INFO_SQ.NEXTVAL,
+				#{prodNo},
+				#{mberId}
+			)
+	
+	</insert>
+
+	<select id="selectCartList" resultType="com.raregames.domain.CartProdVO">
+	
+		SELECT
+			c.CART_NO			cartNo,
+			c.PROD_NO			prodNo,
+			c.MBER_ID			mberId,
+			p.PROD_NM			prodNm,
+			p.PROD_PRICE		prodPrice,
+			p.DISCNT_RATE		discntRate,
+			p.GAME_RATING		gameRating,
+			p.PLATFORM			platform,
+			p.PROD_IMG			prodImg,
+			p.FRST_REGIST_DE	frstRegistDe
+		FROM
+			CART_INFO c
+		INNER JOIN
+			PROD_INFO p
+		ON	c.PROD_NO = p.PROD_NO
+		WHERE
+			c.MBER_ID = #{mberId}
+	
+	</select>
+	
+	<delete id="deleteCart">
+	
+		DELETE FROM 
+			CART_INFO
+		WHERE
+			MBER_ID = #{mberId}
+		AND
+			PROD_NO = #{prodNo}
+	
+	</delete>
+	
+	<delete id="deleteMberAll">
+	
+		DELETE FROM 
+			CART_INFO
+		WHERE
+			MBER_ID = #{mberId}
+	
+	</delete>
+	
+	<delete id="deleteProdAll">
+	
+		DELETE FROM 
+			CART_INFO
+		WHERE
+			PROD_NO = #{prodNo}
+	
+	</delete>
+	
+</mapper>

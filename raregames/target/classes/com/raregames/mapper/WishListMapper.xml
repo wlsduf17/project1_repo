@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.WishListMapper">
+
+	<insert id="insertWishList">
+	
+		INSERT INTO WISHLIST
+			(
+				WISHLIST_NO,
+				PROD_NO,
+				MBER_ID
+			)
+		VALUES
+			(
+				WISHLIST_SQ.NEXTVAL,
+				#{prodNo},
+				#{mberId}			
+			)
+	
+	</insert>
+	
+	<select id="selectWishList" resultType="com.raregames.domain.WishListProdVO">
+		
+		SELECT
+			w.WISHLIST_NO			wishlistNo,
+			w.PROD_NO				prodNo,
+			w.MBER_ID				mberId,
+			p.PROD_NM				prodNM,
+			p.PROD_PRICE			prodPrice,
+			p.DISCNT_RATE			discntRate,
+			p.GAME_RATING			gameRating,
+			p.PLATFORM				platform,
+			p.PROD_IMG				prodImg,
+			p.FRST_REGIST_DE		frstRegistDe
+		FROM
+			WISHLIST w
+		INNER JOIN
+			PROD_INFO p
+		ON
+			w.PROD_NO = p.PROD_NO
+		WHERE
+			w.MBER_ID = #{mberId}
+			
+	</select>
+	
+	<delete id="deleteWishList">
+	
+		DELETE
+		FROM
+			WISHLIST
+		WHERE
+			MBER_ID = #{mberId}
+		AND
+			PROD_NO = #{prodNo}
+	
+	</delete>
+	
+	<delete id="deleteProdAll">
+	
+		DELETE
+		FROM
+			WISHLIST
+		WHERE
+			PROD_NO = #{prodNo}
+	
+	</delete>
+	
+	<delete id="deleteMberAll">
+	
+		DELETE
+		FROM
+			WISHLIST
+		WHERE
+			MBER_ID = #{mberId}
+	
+	</delete>
+	
+</mapper>

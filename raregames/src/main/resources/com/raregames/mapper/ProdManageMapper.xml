@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.ProdManageMapper">
+	
+	
+
+	<insert id="insertProd">
+		
+		INSERT INTO PROD_INFO
+			(
+				PROD_NO,
+				PROD_NM, 
+				GENRE_CD, 
+				FEATURE_CD, 
+				PROD_PRICE, 
+				DISCNT_RATE,
+				GAME_RATING, 
+				DEVELOPER, 
+				PUBLISHER, 
+				PLATFORM, 
+				RELEASE_DE,
+				PROD_IMG, 
+				PROD_CN,  
+			 	PURCHASE_AT
+			 )
+		VALUES
+			(
+				PROD_INFO_SQ.NEXTVAL,
+				#{prodNm},
+				#{genreCd},
+				#{featureCd},
+				#{prodPrice},
+				#{discntRate},
+				#{gameRating},
+				#{developer},
+				#{publisher},
+				#{platform},
+				#{releaseDe},
+				#{prodImg},
+				#{prodCn},
+				#{purchaseAt}
+			)
+	
+	</insert>
+	
+	<select id="selectGenreList" resultType="com.raregames.domain.GenreVO">
+	
+		SELECT
+			GENRE_CD			genreCd,
+			GENRE_NM			genreNm
+		FROM
+			GENRE
+	
+	</select>
+	
+	<select id="selectFeatureList" resultType="com.raregames.domain.FeatureVO">
+	
+		SELECT
+			FEATURE_CD			featureCd,
+			FEATURE_NM			featureNm
+		FROM
+			FEATURE
+	
+	</select>
+	
+	<!-- ProdManageVO ResultMap -->	
+	<resultMap type="com.raregames.domain.ProdManageVO" id="prodManageVO">
+		<result column="PROD_NO" property="prodNo" />
+		<result column="PROD_NM" property="prodNm" />
+		<result column="GENRE_CD" property="genreCd" />
+		<result column="FEATURE_CD" property="featureCd" />
+		<result column="PROD_PRICE" property="prodPrice" />
+		<result column="DISCNT_RATE" property="discntRate" />
+		<result column="GAME_RATING" property="gameRating" />
+		<result column="DEVELOPER" property="developer" />
+		<result column="PUBLISHER" property="publisher" />
+		<result column="PLATFORM" property="platform" />
+		<result column="RELEASE_DE" property="releaseDe" />
+		<result column="PROD_IMG" property="prodImg" />
+		<result column="PROD_CN" property="prodCn" />
+		<result column="PURCHASE_AT" property="purchaseAt" />
+		<result column="FRST_REGIST_DE" property="frstRegistDe" />
+		<result column="LAST_UPDT_DE" property="lastUpdtDe" />
+	</resultMap>
+		
+		<sql id="ProdInfoColumn">
+			PROD_NO, 
+			PROD_NM, 
+			GENRE_CD, 
+			FEATURE_CD, 
+			PROD_PRICE, 
+			DISCNT_RATE, 
+	 		GAME_RATING, 
+	 		DEVELOPER, 
+	 		PUBLISHER, 
+	 		PLATFORM, 
+	 		RELEASE_DE, 
+	 		PROD_IMG, 
+	 		PROD_CN,  
+	 		PURCHASE_AT, 
+	 		FRST_REGIST_DE, 
+	 		LAST_UPDT_DE
+		</sql>
+	
+	<select id="selectProdList" resultMap="prodManageVO">
+		
+		SELECT 
+			<include refid="ProdInfoColumn" />
+		FROM
+			PROD_INFO
+		WHERE
+			PURCHASE_AT = 'Y'
+		
+	</select>
+	
+	<!-- 관리자 상품목록 출력 -->
+	<select id="selectProdListWithPaging" resultMap="prodManageVO">
+		
+		SELECT 
+			<include refid="ProdInfoColumn" />
+		FROM
+			(
+				SELECT /*+ index_desc(PROD_INFO PROD_INFO_PK) */
+					ROWNUM RN,
+					<include refid="ProdInfoColumn" />
+			 	FROM
+			 		PROD_INFO
+			 	WHERE
+			 		<trim prefix="(" suffix=") AND" prefixOverrides="or">
+			 			<foreach collection="searchTypeArr" item="searchType">
+							<trim prefix="or">
+								<choose>
+									<when test="searchType == 'prodNm'">
+										PROD_NM like '%' || #{searchTerm} || '%' 
+									</when>
+									<when test="searchType == 'developer'">
+										DEVELOPER like '%' || #{searchTerm} || '%' 
+									</when>
+									<when test="searchType == 'publisher'">
+										PUBLISHER like '%' || #{searchTerm} || '%' 
+									</when>
+									<when test="searchType == 'Sell'">
+										PURCHASE_AT = 'Y'
+									</when>
+									<when test="searchType == 'UnSell'">
+										PURCHASE_AT = 'N'
+									</when>
+									<when test="searchType == 'Discnt'">
+									<![CDATA[
+										DISCNT_RATE < 1
+										]]>
+									</when>
+								</choose>
+							</trim>
+			 			</foreach>
+			 		</trim>
+			 		<![CDATA[
+			 		ROWNUM <= (#{pageNo} * #{pageSize})
+			)
+		WHERE 
+			RN > ((#{pageNo} - 1) * #{pageSize})
+		]]>
+	
+	</select>
+		
+	<select id="getTotalCo" resultType="int">
+		
+		SELECT 
+			COUNT(*)
+		FROM
+			PROD_INFO
+		<trim prefix="WHERE (" suffix=")" prefixOverrides="or">
+	 			<foreach collection="searchTypeArr" item="searchType">
+					<trim prefix="or">
+						<choose>
+							<when test="searchType == 'prodNm'">
+								PROD_NM LIKE '%' || #{searchTerm} || '%' 
+							</when>
+							<when test="searchType == 'developer'">
+								DEVELOPER LIKE '%' || #{searchTerm} || '%' 
+							</when>
+							<when test="searchType == 'publisher'">
+								PUBLISHER LIKE '%' || #{searchTerm} || '%' 
+							</when>
+							<when test="searchType == 'Sell'">
+								PURCHASE_AT = 'Y'
+							</when>
+							<when test="searchType == 'UnSell'">
+								PURCHASE_AT = 'N'
+							</when>
+							<when test="searchType == 'Discnt'">
+							<![CDATA[
+								DISCNT_RATE < 1
+								]]>
+							</when>
+						</choose>
+					</trim>
+	 			</foreach>
+	 		</trim>
+		 		
+	</select>
+	
+	
+	<select id="selectProd" resultMap="prodManageVO">
+	
+		SELECT 
+			<include refid="ProdInfoColumn" />
+		FROM
+			PROD_INFO
+		WHERE
+			PROD_NO = #{prodNo}
+	
+	</select>
+	
+	<delete id="deleteProd">
+	
+		DELETE 
+		FROM 
+			PROD_INFO
+		WHERE
+			PROD_NO = #{prodNo}
+	
+	</delete>
+	
+	<update id="updateProd">
+	
+		UPDATE
+			PROD_INFO
+		SET
+			PROD_NM	= #{prodNm},
+			GENRE_CD = #{genreCd},
+			FEATURE_CD = #{featureCd},
+			PROD_PRICE = #{prodPrice},
+			DISCNT_RATE = #{discntRate},
+	 		GAME_RATING	= #{gameRating},
+	 		DEVELOPER = #{developer},
+	 		PUBLISHER = #{publisher},
+	 		PLATFORM = #{platform},
+	 		RELEASE_DE = #{releaseDe},
+	 		PROD_IMG = #{prodImg},
+	 		PROD_CN = #{prodCn},
+	 		PURCHASE_AT = #{purchaseAt},
+	 		LAST_UPDT_DE = SYSDATE
+		WHERE
+			PROD_NO = #{prodNo}
+	
+	</update>
+	
+	<select id="selectGenreNm" resultType="String">
+	
+		SELECT
+			GENRE_NM		genreNm
+		FROM
+			GENRE
+		WHERE
+			GENRE_CD LIKE '%' || #{genreCd} || '%'
+	
+	</select>
+	
+	<select id="selectFeatureNm" resultType="String">
+	
+		SELECT
+			FEATURE_NM		featureNm
+		FROM
+			FEATURE
+		WHERE
+			FEATURE_CD LIKE '%' || #{featureCd} || '%'
+	
+	</select>
+	
+	<select id="selectCategoryListWithPaging" resultMap="prodManageVO">
+		
+		<if test="criteria.searchType == 'topSeller' ">
+			SELECT 
+				a.PROD_NO, 
+				a.PROD_NM, 
+				a.GENRE_CD, 
+				a.FEATURE_CD, 
+				a.PROD_PRICE, 
+				a.DISCNT_RATE, 
+		 		a.GAME_RATING, 
+		 		a.DEVELOPER, 
+		 		a.PUBLISHER, 
+		 		a.PLATFORM, 
+		 		a.RELEASE_DE, 
+		 		a.PROD_IMG, 
+		 		a.PROD_CN,  
+		 		a.PURCHASE_AT, 
+		 		a.FRST_REGIST_DE, 
+		 		a.LAST_UPDT_DE
+			FROM
+				(
+					SELECT
+						ROWNUM RN,
+						<include refid="ProdInfoColumn" />
+				 	FROM
+				 		PROD_INFO
+				 	WHERE
+				 		<trim prefix="(" suffix=") AND" prefixOverrides="and">
+							<if test="genreCd != null and genreCd != '' ">
+								GENRE_CD LIKE '%' || #{genreCd} || '%'
+							</if>
+							<trim prefix="AND">
+								<if test="featureCd != null and featureCd != '' ">
+									FEATURE_CD LIKE '%' || #{featureCd} || '%'
+								</if>
+							</trim>
+				 		</trim>
+				 		<![CDATA[
+				 		ROWNUM <= (#{criteria.pageNo} * #{criteria.pageSize})
+			 		AND
+						PURCHASE_AT = 'Y'
+				)	a
+			INNER JOIN
+				(
+					SELECT
+						PROD_NO
+					FROM
+						PURCHSE_DETAIL
+					GROUP BY
+						PROD_NO
+					ORDER BY
+						COUNT(PROD_NO) DESC
+				)	b
+			ON
+				a.PROD_NO = b.PROD_NO
+			WHERE
+				RN > ((#{criteria.pageNo} - 1) * #{criteria.pageSize})
+			]]>
+			
+		</if>
+		
+		<if test="criteria.searchType == 'onSale' || criteria.searchType == 'newRelease' || criteria.searchType == null || criteria.searchType == '' ">
+			SELECT 
+				<include refid="ProdInfoColumn" />
+			FROM
+				(
+					SELECT /*+ index_desc(PROD_INFO PROD_INFO_PK) */
+						ROWNUM RN,
+						<include refid="ProdInfoColumn" />
+				 	FROM
+				 		PROD_INFO
+				 	WHERE
+				 		<trim prefix="(" suffix=") AND" prefixOverrides="or">
+							<trim prefix="or">
+								<if test="criteria.searchType == 'onSale'">
+									<![CDATA[
+									DISCNT_RATE < 1
+									]]>
+								</if>
+							</trim>
+				 		</trim>
+				 		<trim prefix="(" suffix=") AND" prefixOverrides="and">
+							<if test="genreCd != null and genreCd != '' ">
+								GENRE_CD LIKE '%' || #{genreCd} || '%'
+							</if>
+							<trim prefix="AND">
+								<if test="featureCd != null and featureCd != '' ">
+									FEATURE_CD LIKE '%' || #{featureCd} || '%'
+								</if>
+							</trim>
+				 		</trim>
+				 		<![CDATA[
+				 		ROWNUM <= (#{criteria.pageNo} * #{criteria.pageSize})
+			 		AND
+						PURCHASE_AT = 'Y'
+				)
+			WHERE
+				RN > ((#{criteria.pageNo} - 1) * #{criteria.pageSize})
+			]]>
+			<trim prefix="ORDER BY">
+				<if test="criteria.searchType == 'newRelease'">
+					RELEASE_DE DESC
+				</if>
+	 		</trim>	
+ 		</if>
+	
+	</select>
+	
+	
+	<select id="getCategoryTotalCo" resultType="int">
+		
+		<if test="criteria.searchType == 'topSeller' ">
+			SELECT
+				COUNT(*)
+			FROM
+				PROD_INFO a
+			INNER JOIN
+				(
+					SELECT
+						PROD_NO
+					FROM
+						PURCHSE_DETAIL
+					GROUP BY
+						PROD_NO
+				) b
+			ON
+				a.PROD_NO = b.PROD_NO
+			WHERE
+				a.PURCHASE_AT = 'Y'
+				
+		</if>
+		
+		<if test="criteria.searchType == 'onSale' || criteria.searchType == 'newRelease' || 
+			criteria.searchType == null || criteria.searchType == '' ">
+			SELECT 
+				COUNT(*)
+			FROM
+				PROD_INFO
+			WHERE
+			<trim prefix="(" suffix=") AND" prefixOverrides="or">
+				<trim prefix="or">
+					<if test="criteria.searchType == 'onSale'">
+						<![CDATA[
+						DISCNT_RATE < 1
+						]]>
+					</if>
+				</trim>
+	 		</trim>
+			<trim prefix="(" suffix=") AND" prefixOverrides="and">
+				<if test="genreCd != null and genreCd != '' ">
+					GENRE_CD LIKE '%' || #{genreCd} || '%'
+				</if>
+				<trim prefix="AND">
+					<if test="featureCd != null and featureCd != '' ">
+						FEATURE_CD LIKE '%' || #{featureCd} || '%'
+					</if>
+				</trim>
+	 		</trim>
+			 PURCHASE_AT = 'Y'
+		 </if>
+		 
+	</select>
+	
+	
+	<!-- 할인상품리스트 -->
+	<select id="selectOnSaleProdList" resultMap="prodManageVO">
+		
+		SELECT 
+			<include refid="ProdInfoColumn" />
+		FROM
+			PROD_INFO
+		<![CDATA[
+	 	WHERE
+	 		DISCNT_RATE < 1
+	 	AND
+	 		PURCHASE_AT = 'Y'
+		]]>
+	
+	</select>
+	
+	
+	<!-- 신규 상품 리스트(3개월 이내, 출시 내림차순) -->
+	<select id="selectNewReleaseProdList" resultMap="prodManageVO">
+		
+		SELECT 
+			<include refid="ProdInfoColumn" />
+		FROM
+			PROD_INFO
+		WHERE
+			<![CDATA[
+			(TRUNC(SYSDATE, 'DD') - TRUNC(RELEASE_DE, 'DD')) <= 90
+			]]>
+		AND
+			PURCHASE_AT = 'Y'
+		ORDER BY 
+			RELEASE_DE DESC
+			
+	</select>
+	
+	
+	<!-- 많이팔린 상품리스트(판매횟수 내림차순) -->
+	<select id="selectTopSellerProdList" resultMap="prodManageVO">
+		
+		SELECT 
+			a.PROD_NO, 
+			a.PROD_NM, 
+			a.GENRE_CD, 
+			a.FEATURE_CD, 
+			a.PROD_PRICE, 
+			a.DISCNT_RATE, 
+	 		a.GAME_RATING, 
+	 		a.DEVELOPER, 
+	 		a.PUBLISHER, 
+	 		a.PLATFORM, 
+	 		a.RELEASE_DE, 
+	 		a.PROD_IMG, 
+	 		a.PROD_CN,  
+	 		a.PURCHASE_AT, 
+	 		a.FRST_REGIST_DE, 
+	 		a.LAST_UPDT_DE
+		FROM
+			PROD_INFO a
+		INNER JOIN
+			(
+				SELECT
+					PROD_NO
+				FROM
+					PURCHSE_DETAIL
+				GROUP BY
+					PROD_NO
+				ORDER BY
+					COUNT(PROD_NO) DESC
+			)	b
+		ON
+			a.PROD_NO = b.PROD_NO
+		WHERE
+			a.PURCHASE_AT = 'Y'
+		
+	</select>
+	
+	
+</mapper>

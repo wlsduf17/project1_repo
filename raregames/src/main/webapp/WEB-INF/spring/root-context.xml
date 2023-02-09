@@ -1,0 +1,70 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+
+	<!-- Root Context: defines shared resources visible to all other web components -->
+		
+	<!-- HikariCP + log4j 추가 설정, SQL로그 확인 가능, 배포시에 log4j 설정 제거해야함. -->
+	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+		<property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy" />
+		<property name="jdbcUrl" value="jdbc:log4jdbc:oracle:thin:@localhost:1521:xe" />
+		<property name="username" value="raregames" />
+		<property name="password" value="1234" />
+	</bean>
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<constructor-arg ref="hikariConfig" />
+	</bean>
+	
+	<!-- HikariCP 설정 -->
+	<!-- <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" /> -->
+	<!-- <property name="jdbcUrl" value="jdbc:oracle:thin:@localhost:1521:xe" /> -->
+	
+	<!-- Mybatis설정 - SqlSessionFactory: 내부적으로 SqlSession을 만들어 Connection생성, SQL전달, 결과 리턴을 받게된다. -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- mybatis-spring:scan 태그 : 해당 패키지의 mybatis 어노테이션 처리 -->
+	<mybatis-spring:scan base-package="com.raregames.mapper" />
+	
+	<!-- service 인터페이스 설정, service, controller의 경우, context:component-scan으로 설정 -->
+	<context:component-scan base-package="com.raregames.service" />
+	
+	<!-- 트랜잭션 설정 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<tx:annotation-driven />
+	
+	<!-- SMTP메일, Gmail설정정보, com.raregames.controller.MberManageController 인증메일 전송에 입력필요  -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host"  value="smtp.gmail.com" />
+		<property name="port" value="587"></property>
+		<property name="username" value="wlsduf17@gmail.com"></property><!-- 실제 이메일주소 입력 -->
+		<property name="password" value="bmgafixjpbkbvqhs"></property><!-- Gmail보안에서 앱비밀번호 사용 -->
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+			</props>
+		</property>
+		
+	</bean>
+	
+	<!-- 업로드 폴더 설정 -->
+	<bean id="uploadFolder" class="java.lang.String">
+		<constructor-arg value="d:\\Dev\\upload" />
+	</bean>
+	
+</beans>

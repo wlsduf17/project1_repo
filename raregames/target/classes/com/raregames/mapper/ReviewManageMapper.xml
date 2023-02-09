@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.ReviewManageMapper">
+	
+	<insert id="insertReview">
+
+		INSERT INTO REVIEW_INFO
+			(
+				REVIEW_NO,
+				PROD_NO,
+				MBER_ID,
+				MBER_NICKNM,
+				REVIEW_CN,
+				REVIEW_SCORE
+			)
+		VALUES
+			(
+				REVIEW_INFO_SQ.NEXTVAL,
+				#{prodNo},
+				#{mberId},
+				#{mberNicknm},
+				#{reviewCn},
+				#{reviewScore}
+			)
+	
+	</insert>
+	
+	<select id="selectReviewListWithPaging" resultType="com.raregames.domain.ReviewManageVO">
+		
+		SELECT
+			REVIEW_NO				reviewNo, 
+			PROD_NO					prodNo, 
+			MBER_ID					mberId,
+			MBER_NICKNM				mberNicknm, 
+			REVIEW_CN				reviewCn, 
+			REVIEW_SCORE			reviewScore, 
+			FRST_REGIST_DE			frstRegistDe, 
+			LAST_UPDT_DE			lastUpdtDe
+		FROM
+			(
+				SELECT /*+ index_desc(REVIEW_INFO REVIEW_INFO_PK) */
+					ROWNUM RN,
+					REVIEW_NO,
+					PROD_NO,
+					MBER_ID,
+					MBER_NICKNM,
+					REVIEW_CN,
+					REVIEW_SCORE,
+					FRST_REGIST_DE,
+					LAST_UPDT_DE
+				FROM
+					REVIEW_INFO
+				WHERE
+					PROD_NO = #{prodNo}
+				AND
+					<![CDATA[
+					ROWNUM <= (#{criteria.pageNo} * #{criteria.pageSize})
+			)
+		WHERE
+			RN > ((#{criteria.pageNo} - 1) * #{criteria.pageSize})
+			]]>
+			
+	</select>
+
+	<select id="getTotalCo" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			REVIEW_INFO
+		WHERE
+			PROD_NO = #{criteria.prodNo}
+			
+	</select>
+	
+	<update id="updateReview">
+	
+		UPDATE
+			REVIEW_INFO
+		SET
+			REVIEW_CN = #{reviewCn},
+			REVIEW_SCORE = #{reviewScore}, 
+			LAST_UPDT_DE = SYSDATE
+		WHERE
+			REVIEW_NO = #{reviewNo}
+	
+	</update>
+	
+	
+	<delete id="deleteReview">
+	
+		DELETE 
+		FROM 
+			REVIEW_INFO
+		WHERE 
+			REVIEW_NO = #{reviewNo}
+	
+	</delete>
+	
+	<delete id="deleteProdAll">
+	
+		DELETE 
+		FROM 
+			REVIEW_INFO
+		WHERE 
+			PROD_NO = #{prodNo}
+	
+	</delete>
+	
+	<delete id="deleteMberAll">
+		
+		DELETE 
+		FROM 
+			REVIEW_INFO
+		WHERE 
+			MBER_ID = #{mberId}
+	
+	</delete>
+	
+</mapper>

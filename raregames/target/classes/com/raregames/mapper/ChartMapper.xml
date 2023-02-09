@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.raregames.mapper.ChartMapper">
+
+	<select id="totalSalesPerProd" resultType="com.raregames.domain.ChartVO">
+	
+		SELECT
+			PROD_NM							prodNm,
+			SUM(PROD_PRICE * DISCNT_RATE)	totalSalesPerProd
+		FROM
+			PURCHSE_DETAIL
+		GROUP BY
+    		PROD_NM
+		ORDER BY
+		    PROD_NM
+	
+	</select>
+
+	<select id="totalSalesPerYear" resultType="com.raregames.domain.ChartVO">
+	
+		SELECT
+		    TO_CHAR(PURCHSE_DE, 'YYYY')		year, 
+		    SUM(PURCHSE_PRICE)				totalSalesPerYear
+		FROM
+		    PURCHSE_INFO
+		GROUP BY
+		    TO_CHAR(PURCHSE_DE, 'YYYY')
+		ORDER BY
+		    TO_CHAR(PURCHSE_DE, 'YYYY')
+	
+	</select>
+	
+	<select id="totalSalesPerMonth" resultType="com.raregames.domain.ChartVO">
+		
+		SELECT
+		    b.PROD_NM							prodNm,
+		    SUM(a.PURCHSE_PRICE)				totalSalesPerMonth
+		FROM
+		    PURCHSE_INFO a
+		INNER JOIN
+		    PURCHSE_DETAIL b
+		ON
+		    a.PURCHSE_NO = b.PURCHSE_NO
+		WHERE
+		    TO_CHAR(a.PURCHSE_DE, 'YYYY/MM') = #{purchseDe}
+		GROUP BY
+		    TO_CHAR(a.PURCHSE_DE, 'YYYY/MM'), b.PROD_NM
+		ORDER BY
+		    TO_CHAR(a.PURCHSE_DE, 'YYYY/MM'), b.PROD_NM
+	
+	</select>
+	
+	<select id="selectPurchseDeYear" resultType="String">
+	
+		SELECT
+    		DISTINCT TO_CHAR(PURCHSE_DE, 'YYYY')
+		FROM
+		    PURCHSE_INFO
+		ORDER BY
+			 TO_CHAR(PURCHSE_DE, 'YYYY') ASC
+		   
+	</select>
+	
+	<select id="selectPurchseDeMonth" resultType="String">
+	
+		SELECT
+    		DISTINCT TO_CHAR(PURCHSE_DE, 'MM')
+		FROM
+		    PURCHSE_INFO
+		WHERE
+			TO_CHAR(PURCHSE_DE, 'YYYY') = #{year}
+		ORDER BY
+			TO_CHAR(PURCHSE_DE, 'MM') ASC
+		   
+	</select>
+	
+</mapper>
